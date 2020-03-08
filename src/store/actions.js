@@ -6,7 +6,7 @@ function handleError(commit, error) {
 }
 
 export default {
-  async login({ commit }, userId) {
+  async login({ commit, state }, userId) {
     try {
       commit('setError', '');
       commit('setLoading', true);
@@ -15,6 +15,22 @@ export default {
         username: currentUser.id,
         name: currentUser.name
       });
+      try {
+        const rooms = currentUser.rooms.map(room => ({
+          id: room.id,
+          name: room.name
+        }));
+        commit('setRooms', rooms);
+        const activeRoom = state.activeRoom || rooms[0];
+        commit('setActiveRoom', {
+          id: activeRoom.id,
+          name: activeRoom.name
+        });
+        await chatkit.subscribeToRoom(activeRoom.id);
+        return true;
+      } catch (error) {
+        console.log(error);
+      }
       commit('setReconnect', false);
     } catch (error) {
       handleError(commit, error);
